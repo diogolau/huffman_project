@@ -3,32 +3,14 @@
 #include <vector>
 #include <algorithm>
 #include <map>
+#include <stack>
 
-struct Frequencia {
-    char c;
-    float frequencia;
-    Frequencia(char c):c(c), frequencia(1){};
-};
 
 struct NoHuffman {
     std::string c;
     float frequencia;
     NoHuffman *lde, *ldo;
 };
-
-
-std::vector<NoHuffman *> nos(std::vector<Frequencia> &simbolos) {
-    std::vector<NoHuffman *> result;
-    for (Frequencia el : simbolos) {
-        NoHuffman *no = new NoHuffman();
-        no->c = el.c;
-        no->frequencia = el.frequencia;
-        no->lde = no->ldo = NULL;
-        result.push_back(no);
-    }
-
-    return result;
-}
 
 
 NoHuffman *gerar_arvore(std::vector<NoHuffman *> &simbolos) {
@@ -39,8 +21,8 @@ NoHuffman *gerar_arvore(std::vector<NoHuffman *> &simbolos) {
         novoNo->frequencia = simbolos[simbolos.size() - 1]->frequencia + simbolos[simbolos.size() - 2]->frequencia;
         novoNo->c = "NULL " + std::to_string(countNull);
         countNull++;
-        novoNo->lde = simbolos[simbolos.size() - 1];
-        novoNo->ldo = simbolos[simbolos.size() - 2];
+        novoNo->ldo = simbolos[simbolos.size() - 1];
+        novoNo->lde = simbolos[simbolos.size() - 2];
         simbolos.pop_back(); simbolos.pop_back();
 
         int size = simbolos.size();
@@ -70,19 +52,20 @@ void getPre(NoHuffman* raiz, std::vector<std::string> &preOrderVector) {
     getPre(raiz->ldo, preOrderVector);
 }
 
-void getSim(NoHuffman* raiz, std::vector<std::string> &preOrderVector) {
+void getSim(NoHuffman* raiz, std::vector<std::string> &simOrderVector) {
     if (raiz == NULL) {
         return;
     }
 
-    getSim(raiz->lde, preOrderVector);
-    preOrderVector.push_back(raiz->c);
-    getSim(raiz->ldo, preOrderVector);
+    getSim(raiz->lde, simOrderVector);
+    simOrderVector.push_back(raiz->c);
+    getSim(raiz->ldo, simOrderVector);
 }
 
 void writeOrder(NoHuffman *&raiz) {
     std::vector<std::string> pre;
     getPre(raiz, pre);
+
     std::ofstream preOrderFile("order/pre.txt");
     if (preOrderFile.is_open()) {
         preOrderFile << '[';
@@ -137,27 +120,29 @@ void encode(NoHuffman *&raiz) {
 }
 
 int main() {
-    std::vector<Frequencia> simbolos;
+    std::vector<NoHuffman *> simbolos;
     float total = 0;
 
     std::ifstream toEncode("text/to_encode.txt");
     if (toEncode.is_open()) {
         std::string line;
         while (std::getline(toEncode, line)) {
-            std::cout << "Essa era a frase do arquivo: " << line << std::endl;
             for (int i = 0; i < line.length(); i++) {
                 int j;
-                std::cout << line[i] << std::endl;
+                std::string s(1, line[i]);
                 for (j = 0; j < simbolos.size(); j++) {
-                    if (simbolos[j].c == line[i]) {
-                        simbolos[j].frequencia += 1;
+                    if (simbolos[j]->c == s) {
+                        simbolos[j]->frequencia += 1;
                         total += 1;
                         break;
                     }
                 }
 
                 if (j == simbolos.size()) {
-                    simbolos.push_back(Frequencia(line[i]));
+                    NoHuffman *novoNo = new NoHuffman();
+                    novoNo->c = s;
+                    novoNo->frequencia = 1;
+                    simbolos.push_back(novoNo);
                     total += 1;
                 }
             }
@@ -169,16 +154,11 @@ int main() {
     toEncode.close();
 
     for (int i = 0; i < simbolos.size(); i++) {
-        simbolos[i].frequencia /= total;
+        simbolos[i]->frequencia /= total;
     }
 
-    std::sort(simbolos.begin(), simbolos.end(), [](Frequencia &le, Frequencia &ld){ return le.frequencia >= ld.frequencia; });
-    std::vector<NoHuffman *> simbolos_huffman = nos(simbolos);
-    for (NoHuffman *el : simbolos_huffman) {
-        std::cout << el->c << " " << el->frequencia << std::endl;
-    }
-
-    NoHuffman *raiz = gerar_arvore(simbolos_huffman);
+    std::sort(simbolos.begin(), simbolos.end(), [](NoHuffman* &le, NoHuffman* &ld){ return le->frequencia > ld->frequencia; });
+    NoHuffman *raiz = gerar_arvore(simbolos);
     writeOrder(raiz);
     encode(raiz);
 
