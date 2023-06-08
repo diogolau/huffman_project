@@ -19,7 +19,7 @@ NoHuffman *gerar_arvore(std::vector<NoHuffman *> &simbolos) {
     while (simbolos.size() > 1) {
         NoHuffman *novoNo = new NoHuffman();
         novoNo->frequencia = simbolos[simbolos.size() - 1]->frequencia + simbolos[simbolos.size() - 2]->frequencia;
-        novoNo->c = "NULL " + std::to_string(countNull);
+        novoNo->c = "NULL" + std::to_string(countNull);
         countNull++;
         novoNo->ldo = simbolos[simbolos.size() - 1];
         novoNo->lde = simbolos[simbolos.size() - 2];
@@ -68,11 +68,9 @@ void writeOrder(NoHuffman *&raiz) {
 
     std::ofstream preOrderFile("order/pre.txt");
     if (preOrderFile.is_open()) {
-        preOrderFile << '[';
         for (std::string el : pre) {
             preOrderFile << '\'' << el << '\'' << ' ';
         }
-        preOrderFile << ']';
     }
     preOrderFile.close();
 
@@ -80,11 +78,9 @@ void writeOrder(NoHuffman *&raiz) {
     getSim(raiz, sim);
     std::ofstream simOrderFile("order/sim.txt");
     if (simOrderFile.is_open()) {
-        simOrderFile << '[';
         for (std::string el : sim) {
             simOrderFile << '\'' << el << '\'' << ' ';
         }
-        simOrderFile << ']';
     }
     simOrderFile.close();
 }
